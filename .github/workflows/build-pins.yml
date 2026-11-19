@@ -1,0 +1,38 @@
+name: Build pin images
+on:
+  push:
+    branches: [main]
+    paths: ["data/pins.json", "scripts/**", "fonts/**", ".github/workflows/build-pins.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: build-pins
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Playwright
+        run: pip install playwright==1.48.0
+      - name: Download listing photos from Etsy
+        run: python scripts/fetch_photos.py data/pins.json photos
+      - name: Render pins (1000x1500)
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: python scripts/render_pins.py data/pins.json photos pins
+      - name: Commit pin images
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p data
+          cp photos/FAILED.txt data/FAILED.txt 2>/dev/null || rm -f data/FAILED.txt
+          cp photos/FIXED_URLS.txt data/FIXED_URLS.txt 2>/dev/null || true
+          git add pins data
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Build pin images [skip ci]"
+          git push
