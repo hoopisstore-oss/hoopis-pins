@@ -18,15 +18,14 @@ FONTS = "".join(
                  ("Archivo", "archivo-black-latin-400-normal.woff2")))
 
 # The Etsy main photo carries its own title in the top band; crop it away.
-CROP_TOP = 0.17
+CROP_TOP = 0.18
 
 def edge_colors(photo):
     from PIL import Image, ImageStat
     im = Image.open(photo).convert("RGB"); w, h = im.size
     def avg(box):
         return ImageStat.Stat(im.crop(box)).mean
-    t1 = avg((0, int(h*.22), int(w*.14), int(h*.40))); t2 = avg((int(w*.86), int(h*.22), w, int(h*.40)))
-    top = [ (a+b)/2 for a, b in zip(t1, t2)]
+    top = avg((0, int(h*.19), w, int(h*.24)))
     bot = avg((0, int(h*.90), w, h))
     hexc = lambda c: "#%02x%02x%02x" % tuple(int(max(0, min(255, v))) for v in c)
     return hexc(top), hexc(bot)
@@ -42,7 +41,7 @@ body{{width:1000px;height:1500px;overflow:hidden;position:relative;background:#e
 .bg{{position:absolute;inset:0;background:linear-gradient(to bottom,{top} 0%,{top} 30%,{bot} 75%,{bot} 100%)}}
 .ph{{position:absolute;left:-330px;right:-330px;top:350px;height:960px;
   background:url(data:image/jpeg;base64,{img}) no-repeat;background-size:1660px auto;background-position:center {-1660*801/1080*CROP_TOP:.0f}px;
-  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 60px,#000 800px,transparent 960px),
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,rgba(0,0,0,.6) 70px,#000 150px,#000 800px,transparent 960px),
                      linear-gradient(to right,transparent 0,#000 260px,#000 1400px,transparent 1660px);
   -webkit-mask-composite:source-in;mask-composite:intersect}}
 svg.t{{position:absolute;left:0;top:40px;width:1000px;height:380px;overflow:visible}}
@@ -50,7 +49,7 @@ svg.t{{position:absolute;left:0;top:40px;width:1000px;height:380px;overflow:visi
 .sub{{font-family:'Lilita';fill:#fff;letter-spacing:3px;filter:drop-shadow(0 2px 4px rgba(70,40,20,.35))}}
 .pill{{position:absolute;left:0;right:0;top:1258px;text-align:center}}
 .pill span{{display:inline-block;min-width:440px;padding:6px 46px 12px;border:5px solid #fff;border-radius:60px;
-  font-family:'Script';font-size:52px;color:#fff;text-shadow:0 2px 8px rgba(60,35,15,.5);box-shadow:0 2px 8px rgba(70,40,20,.15)}}
+  font-family:'Script';font-size:52px;color:#fff;text-shadow:0 2px 8px rgba(60,35,15,.5);box-shadow:0 2px 8px rgba(70,40,20,.15);background:rgba(60,35,15,.10)}}
 .logo{{position:absolute;left:0;right:0;top:1372px;text-align:center;color:#fff;filter:drop-shadow(0 2px 6px rgba(50,30,10,.5))}}
 .logo .w{{font-family:'Archivo';font-size:66px;font-style:italic;transform:skewX(-8deg);display:inline-block;letter-spacing:1px;line-height:1}}
 .logo .s{{font-family:'Archivo';font-size:15px;letter-spacing:4px;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:16px}}
