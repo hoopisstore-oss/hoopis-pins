@@ -1,0 +1,36 @@
+name: Build Crotcheting pins
+on:
+  push:
+    branches: [main]
+    paths: ["crotcheting/data/pins.json", "crotcheting/scripts/**", "crotcheting/fonts/**", ".github/workflows/build-crot.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: build-pins
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install playwright==1.48.0 pillow
+      - name: Download listing photos
+        run: python crotcheting/scripts/fetch_photos.py crotcheting/data/pins.json crot_photos
+      - name: Render pins
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: python crotcheting/scripts/render_crot.py crotcheting/data/pins.json crot_photos crotcheting/pins
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp crot_photos/FAILED.txt crotcheting/data/FAILED.txt 2>/dev/null || rm -f crotcheting/data/FAILED.txt
+          git add crotcheting
+          git diff --cached --quiet && exit 0
+          git commit -m "Build Crotcheting pin images [skip ci]"
+          git pull --rebase
+          git push
